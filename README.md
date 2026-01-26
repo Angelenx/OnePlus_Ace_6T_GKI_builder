@@ -1,16 +1,16 @@
-## HymoFS
+# OnePlus_Ace_6T_GKI_builder
 
-> **Warning**: This is an experimental kernel modification.
+**Warning:** This is an experimental kernel modification project.
 
-HymoFS is a kernel patch designed to inject virtual entries into directory listings by modifying the `getdents` system call.
+## Risks and Limitations
 
-## Risks & Limitations
+**System Instability**: Modifying kernel file system calls is highly intrusive and may cause kernel panic or system crash.
+**Performance Impact:** Injecting logic increases the overhead of each directory read operation, which may reduce I/O performance.
+**Compatibility Issues:** This patch may conflict with other file system modifications or security modules.
 
-*   **System Instability**: Modifying core filesystem syscalls is highly intrusive and may lead to kernel panics or system freezes.
-*   **Performance Impact**: The injection logic adds overhead to every directory read operation, potentially degrading I/O performance.
-*   **Compatibility Issues**: This patch may conflict with other filesystem modifications or security modules.
-*   **Data Integrity**: While intended to be read-only injection, bugs in the implementation could theoretically affect filesystem stability.
+## Instructions for Use
 
-## Usage
+This kernel is intended for use only by developers and advanced users who understand the risks of kernel-level modifications.
 
-This patch is intended for developers and advanced users who understand the risks involved in kernel-level modifications.
+Acknowledgments
+YAML source: superturtlee/HymoFS
