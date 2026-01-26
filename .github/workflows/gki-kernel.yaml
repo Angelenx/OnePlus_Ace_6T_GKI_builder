@@ -7,7 +7,7 @@ on:
         required: true
         default: "builtin"
       FEIL:
-        description: "内核类型"
+        description: "文件名前缀"
         required: true
         default: "gki"
       ANDROID_VERSION:
