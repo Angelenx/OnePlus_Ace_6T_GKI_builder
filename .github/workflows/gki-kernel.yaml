@@ -274,7 +274,7 @@ jobs:
       - name: "🧠 Set Artifact Name | 设置产物名称"
         id: set_name
         run: |
-          echo "ARTIFACT_NAME=${{ env.FEIL }}_SukiSU_Ultra" >> $GITHUB_OUTPUT
+          echo "ARTIFACT_NAME=${{ env.FEIL }}_SukiSU_Ultra_${{env.KERNEL_MANIFEST}}" >> $GITHUB_OUTPUT
       
       - name: "📦 Package Kernel | 打包内核"
         run: |
