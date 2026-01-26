@@ -2,10 +2,10 @@ name: Build SukiSU Ultra
 on:
   workflow_dispatch:
     inputs:
-      CPU:
-        description: "CPU平台"
+      SUkiSU_BRANCH:
+        description: "SukiSU Ultra分支"
         required: true
-        default: "common"
+        default: "builtin"
       FEIL:
         description: "内核类型"
         required: true
@@ -49,11 +49,11 @@ jobs:
     name: Build SukiSU Kernel - HymoFS Test
     runs-on: ubuntu-latest
     env:
+      SUKISU_BRANCH: ${{ github.event.inputs.SUkiSU_BRANCH }}
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
       CCACHE_HARDLINK: "true"
       CCACHE_MAXSIZE: 8G
-      CPU: ${{ github.event.inputs.CPU }}
       FEIL: ${{ github.event.inputs.FEIL }}
       ANDROID_VERSION: ${{ github.event.inputs.ANDROID_VERSION }}
       KERNEL_VERSION: ${{ github.event.inputs.KERNEL_VERSION }}
@@ -137,7 +137,7 @@ jobs:
           cd kernel_workspace/kernel_platform
           # 下载并执行设置脚本
           echo "🛠️ 正在设置SukiSU Ultra..."
-          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/builtin/kernel/setup.sh" | bash -s builtin
+          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/builtin/kernel/setup.sh" | bash -s ${{env.SUKISU_BRANCH}}
           echo "✅ SukiSU Ultra配置完成"
           
       - name: "🔧 Setup SUSFS | 配置 SUSFS"
