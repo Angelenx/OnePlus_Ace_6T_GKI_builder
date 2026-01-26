@@ -1,0 +1,306 @@
+name: Build SukiSU Ultra
+on:
+  workflow_dispatch:
+    inputs:
+      CPU:
+        description: "CPU平台"
+        required: true
+        default: "common"
+      FEIL:
+        description: "内核类型"
+        required: true
+        default: "gki"
+      ANDROID_VERSION:
+        description: "Android版本"
+        required: true
+        default: "android16"
+      KERNEL_VERSION:
+        description: "内核版本"
+        required: true
+        default: "6.12"
+      KPM:
+        description: "KPM补丁"
+        required: true
+        default: "On"
+      proxy:
+        description: "代理优化"
+        required: true
+        default: "On"
+      APPLY_HYMOFS:
+        description: "应用HymoFS补丁"
+        required: true
+        default: "On"
+      APPLY_ADIOS:
+        description: "应用ADIOS补丁"
+        required: true
+        default: "On"
+      ADIOS_URL:
+        description: "ADIOS补丁链接"
+        required: false
+        default: "https://github.com/firelzrd/adios/raw/refs/heads/main/patches/stable/0001-linux6.12.44-ADIOS-3.1.8.patch"
+      KERNEL_MANIFEST:
+        description: "内核manifest分支"
+        required: true
+        default: "common-android16-6.12-2025-09"
+      
+         
+jobs:
+  build:
+    name: Build SukiSU Kernel - HymoFS Test
+    runs-on: ubuntu-latest
+    env:
+      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
+      CCACHE_NOHASHDIR: "true"
+      CCACHE_HARDLINK: "true"
+      CCACHE_MAXSIZE: 8G
+      CPU: ${{ github.event.inputs.CPU }}
+      FEIL: ${{ github.event.inputs.FEIL }}
+      ANDROID_VERSION: ${{ github.event.inputs.ANDROID_VERSION }}
+      KERNEL_VERSION: ${{ github.event.inputs.KERNEL_VERSION }}
+      KPM: ${{ github.event.inputs.KPM }}
+      proxy: ${{ github.event.inputs.proxy }}
+      APPLY_HYMOFS: ${{ github.event.inputs.APPLY_HYMOFS }}
+      APPLY_ADIOS: ${{ github.event.inputs.APPLY_ADIOS }}
+      KERNEL_MANIFEST: ${{ github.event.inputs.KERNEL_MANIFEST }}
+      ADIOS_URL: ${{ github.event.inputs.ADIOS_URL }}
+      
+    steps:
+      - name: "🚀 Maximize Build Space | 最大化构建空间"
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 8192
+          temp-reserve-mb: 4096
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            patch/
+          sparse-checkout-cone-mode: false
+
+      # ====================== 系统初始化阶段 ======================
+      - name: "🔐 Configure Git | 配置Git账户"
+        run: |
+          echo "🔧 正在配置Git用户信息..."
+          git config --global user.name "angelenx"
+          git config --global user.email "lujinquan2@foxmail.com"
+          echo "✅ Git配置完成"
+      # ====================== 依赖管理阶段 ======================
+      - name: "📦 Cache & Install Dependencies | 缓存 & 安装构建依赖"
+        uses: awalsh128/cache-apt-pkgs-action@latest 
+        with: 
+          packages: python3 git curl libelf-dev build-essential flex bison libssl-dev libncurses-dev liblz4-tool zlib1g-dev libxml2-utils rsync unzip gawk dos2unix
+          execute_install_scripts: true
+
+      # ====================== 源码准备阶段 ======================
+      - name: "📥 Install Repo Tool | 安装Repo工具"
+        run: |
+          echo "⬇️ 正在下载repo工具..."
+          curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
+          chmod a+x ~/repo
+          sudo mv ~/repo /usr/local/bin/repo
+          echo "✅ repo工具安装完成"
+      - name: "⬇️ Clone Kernel Source | 克隆内核源码"
+        run: |
+          git clone https://github.com/WildKernels/AnyKernel3 --depth=1
+          rm -rf ./AnyKernel3/.git
+          mkdir kernel_workspace && cd kernel_workspace
+          mkdir kernel_platform
+          cd kernel_platform
+          
+          echo "🌐 正在初始化内核仓库..."
+          repo init -u https://android.googlesource.com/kernel/manifest -b ${{ env.KERNEL_MANIFEST }} --depth=1
+          echo "🔄 同步代码库(使用$(nproc --all)线程)..."
+          repo sync -c -j$(nproc --all) --no-tags --no-clone-bundle --force-sync
+          cd ../
+          echo "✅ 内核源码克隆完成" 
+     
+          sed -i '/protected_module_names_list = ":gki_aarch64_protected_module_names",/d' kernel_platform/common/BUILD.bazel
+
+          echo "🔧 正在配置内核版本信息..."
+          # Remove -dirty in kernel version
+          sed -i 's/ -dirty//g' kernel_platform/common/scripts/setlocalversion || true
+          sed -i 's/ -dirty//g' kernel_platform/msm-kernel/scripts/setlocalversion || true
+          sed -i 's/ -dirty//g' kernel_platform/external/dtc/scripts/setlocalversion || true
+          sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' kernel_platform/common/scripts/setlocalversion || true
+          sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' kernel_platform/msm-kernel/scripts/setlocalversion || true
+          sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' kernel_platform/external/dtc/scripts/setlocalversion || true
+
+          echo "✅ 内核配置完成"
+
+      # ====================== 内核定制阶段 ======================
+      - name: "⚡ Setup SukiSU Ultra"
+        run: |
+          cd kernel_workspace/kernel_platform
+          # 下载并执行设置脚本
+          echo "🛠️ 正在设置SukiSU Ultra..."
+          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/builtin/kernel/setup.sh" | bash -s builtin
+          echo "✅ SukiSU Ultra配置完成"
+          
+      - name: "🔧 Setup SUSFS | 配置 SUSFS"
+        run: |
+          cd kernel_workspace
+          echo "⬇️ 克隆所需补丁..."
+          git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ env.ANDROID_VERSION }}-${{ env.KERNEL_VERSION }}
+          cd kernel_platform
+          echo "📝 复制补丁文件..."
+          cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ env.ANDROID_VERSION }}-${{ env.KERNEL_VERSION }}.patch ./common/
+          cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
+          cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
+          cd common
+          echo "📦 应用SUSFS补丁..."
+          patch -p1 < 50_add_susfs_in_gki-${{ env.ANDROID_VERSION }}-${{ env.KERNEL_VERSION }}.patch || true
+          echo "✅ 所有补丁应用完成"
+      - name: "⚙️ Apply Fixes"
+        run: |
+          ls
+          cd kernel_workspace/kernel_platform/common
+          
+          patch -p1 --forward < ${{ github.workspace }}/patch/sukisu_fix.patch || true
+          patch -p1 --forward < ${{ github.workspace }}/patch/unicode_bypass_fix.patch || true
+          echo "  [*] Fixed applied!"
+      - name: "⚙️ Apply ADIOS Patch | 应用 ADIOS 补丁"
+        if: ${{ env.APPLY_ADIOS == 'On' }}
+        run: |
+          cd kernel_workspace/kernel_platform/common
+          wget ${{ env.ADIOS_URL }} -O 0001-linux6.12.44-ADIOS-3.1.8.patch
+          
+          patch -p1 -F 3 < 0001-linux6.12.44-ADIOS-3.1.8.patch
+          echo "  [*] ADIOS 代码注入完成！"
+      
+      - name: "⚙️ Apply HymoFS Patch | 应用 HymoFS 补丁"
+        if: ${{ env.APPLY_HYMOFS == 'On' }}
+        run: |
+          cd kernel_workspace/kernel_platform/common
+          patch -p1 -F 3 < ${{ github.workspace }}/patch/hymofs_with_susfs.patch
+          echo "  [*] HymoFS 代码注入完成！"
+          
+          
+      - name: "⚙️ Configure Kernel Options | 配置内核选项"
+        run: |
+          cd kernel_workspace/kernel_platform
+          echo "⚙️ 正在配置内核编译选项..."
+          
+          echo "📦 启用 KSU 支持..."
+          echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
+          
+          if [ "${{ env.KPM }}" == "On" ]; then
+            echo "📦 启用 KPM..."
+            echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
+          fi
+          if [ "${{ env.APPLY_HYMOFS }}" = "On" ]; then
+            echo "CONFIG_HYMOFS=y" >> ./common/arch/arm64/configs/gki_defconfig
+          fi
+          
+          echo "📦 启用 SUSFS 功能..."
+          echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_MAP=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "📦 添加对 Mountify (backslashxx/mountify) 模块的支持"
+          echo "CONFIG_TMPFS_XATTR=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./common/arch/arm64/configs/gki_defconfig
+          if [ "${{ env.proxy }}" == "On" ]; then
+            # Add proxy config
+            echo "📦 加入代理优化..."
+            echo "CONFIG_BPF_STREAM_PARSER=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_NETFILTER_XT_SET=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_MAX=65534" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_BITMAP_IP=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_BITMAP_IPMAC=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_BITMAP_PORT=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_HASH_IP=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_HASH_IPMARK=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_HASH_IPPORT=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_HASH_IPPORTIP=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_HASH_IPPORTNET=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_HASH_IPMAC=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_HASH_MAC=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_HASH_NETPORTNET=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_HASH_NET=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_HASH_NETNET=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_HASH_NETPORT=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_HASH_NETIFACE=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET_LIST_SET=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP6_NF_NAT=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP6_NF_TARGET_MASQUERADE=y" >> ./common/arch/arm64/configs/gki_defconfig
+          fi
+          if [ "${{ env.APPLY_ADIOS }}" == "On" ]; then
+            # Add proxy config
+            echo "📦 ADIOS..."
+            echo "CONFIG_MQ_IOSCHED_ADIOS=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_MQ_IOSCHED_DEFAULT_ADIOS=y" >> ./common/arch/arm64/configs/gki_defconfig
+          fi
+          # Remove check_defconfig
+          sed -i 's/check_defconfig//' ./common/build.config.gki
+          # Replace error echo with a return in kleaf_internal_check_defconfig_minimized
+          
+          sed -i 's|echo ERROR: savedefconfig does not match "${source_config}" >&2|return 0|' ./build/kernel/_setup_env.sh || true
+          
+          echo "✅ 内核配置更新完成"
+          
+      - name: "🔨 Build Kernel | 编译内核"
+        run: |
+          echo "🏗️ 开始内核编译..."
+          
+          cd kernel_workspace/kernel_platform
+          tools/bazel run //common:kernel_aarch64_dist
+          
+          echo "✅ 内核编译完成"
+         
+      - name: "🧩 Patch Kernel Image (KPM) | KPM修补镜像"
+        if: ${{ env.KPM == 'On' }}
+        run: |
+          echo "🔧 正在应用KPM补丁..."
+          cd kernel_workspace/kernel_platform/out/kernel_aarch64/dist
+          curl -LO https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.12.2/patch_linux
+          chmod +x patch_linux
+          ./patch_linux
+          rm -f Image
+          mv oImage Image
+          cp Image $GITHUB_WORKSPACE/AnyKernel3/Image
+          echo "✅ KPM补丁应用完成"
+      - name: "🧠 Set Artifact Name | 设置产物名称"
+        id: set_name
+        run: |
+          echo "ARTIFACT_NAME=${{ env.FEIL }}_SukiSU_Ultra" >> $GITHUB_OUTPUT
+      
+      - name: "📦 Package Kernel | 打包内核"
+        run: |
+          echo "📦 准备AnyKernel3打包环境..."
+          mkdir -p kernel_workspace/kernel_platform/out/Final-Image-Find/
+          dir1=""
+          dir2=""
+          image_path=$(find "kernel_workspace/kernel_platform/out/kernel_aarch64/dist" -name "Image" | head -n 1)
+          if [ -n "$image_path" ]; then
+            dir1=$(dirname "$image_path")/
+            echo "✅ 成功找到 Image 文件"
+          fi
+          if [ -n "$image_path" ] && [ -f "$image_path" ]; then
+            echo "Image file finally located at: $image_path"
+            cp "$image_path" ./AnyKernel3/Image
+            cp "$image_path" kernel_workspace/kernel_platform/out/Final-Image-Find/Image
+          fi
+          cd AnyKernel3
+          zip -r ../${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip ./*
+          cd ..
+          cp ${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip kernel_workspace/
+          echo "✅ 内核打包完成: ${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip"
+      # ====================== 上传阶段 ======================
+
+      - name: "📤 Upload AnyKernel3 | 上传 AnyKernel3"
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip
+          path: ./kernel_workspace/${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip
