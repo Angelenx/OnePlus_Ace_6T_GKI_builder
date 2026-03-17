@@ -29,7 +29,7 @@ on:
       APPLY_HYMOFS:
         description: "应用HymoFS补丁"
         required: true
-        default: "On"
+        default: "Off"
       APPLY_ADIOS:
         description: "应用ADIOS补丁"
         required: true
@@ -37,11 +37,15 @@ on:
       ADIOS_URL:
         description: "ADIOS补丁链接"
         required: false
-        default: "https://github.com/firelzrd/adios/raw/refs/heads/main/patches/stable/0001-linux6.12.44-ADIOS-3.1.8.patch"
+        default: "https://github.com/firelzrd/adios/raw/refs/heads/main/patches/stable/0001-linux6.12.44-ADIOS-3.1.9.patch"
       KERNEL_MANIFEST:
         description: "内核manifest分支"
         required: true
         default: "common-android16-6.12-2025-09"
+      SU_TYPE:
+        description: "选择集成类型: SukiSU 或 ReSukiSU"
+        required: true
+        default: "SukiSU"
       
          
 jobs:
@@ -63,6 +67,7 @@ jobs:
       APPLY_ADIOS: ${{ github.event.inputs.APPLY_ADIOS }}
       KERNEL_MANIFEST: ${{ github.event.inputs.KERNEL_MANIFEST }}
       ADIOS_URL: ${{ github.event.inputs.ADIOS_URL }}
+      SU_TYPE: ${{ github.event.inputs.SU_TYPE }}
       
     steps:
       - name: "🚀 Maximize Build Space | 最大化构建空间"
@@ -135,10 +140,16 @@ jobs:
       - name: "⚡ Setup SukiSU Ultra"
         run: |
           cd kernel_workspace/kernel_platform
-          # 下载并执行设置脚本
-          echo "🛠️ 正在设置SukiSU Ultra..."
-          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/builtin/kernel/setup.sh" | bash -s ${{env.SUKISU_BRANCH}}
-          echo "✅ SukiSU Ultra配置完成"
+          # 根据选择的集成类型执行对应的集成脚本
+          if [ "${{ env.SU_TYPE }}" = "ReSukiSU" ]; then
+            echo "🛠️ 正在设置 ReSukiSU..."
+            curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
+            echo "✅ ReSukiSU 配置完成"
+          else
+            echo "🛠️ 正在设置 SukiSU Ultra..."
+            curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/builtin/kernel/setup.sh" | bash -s ${{env.SUKISU_BRANCH}}
+            echo "✅ SukiSU Ultra 配置完成"
+          fi
           
       - name: "🔧 Setup SUSFS | 配置 SUSFS"
         run: |
@@ -274,7 +285,12 @@ jobs:
       - name: "🧠 Set Artifact Name | 设置产物名称"
         id: set_name
         run: |
-          echo "ARTIFACT_NAME=${{ env.FEIL }}_SukiSU_Ultra_${{env.KERNEL_MANIFEST}}" >> $GITHUB_OUTPUT
+          if [ "${{ env.SU_TYPE }}" = "ReSukiSU" ]; then
+            suffix="ReSukiSU"
+          else
+            suffix="SukiSU_Ultra"
+          fi
+          echo "ARTIFACT_NAME=${{ env.FEIL }}_${suffix}_${{env.KERNEL_MANIFEST}}" >> $GITHUB_OUTPUT
       
       - name: "📦 Package Kernel | 打包内核"
         run: |
