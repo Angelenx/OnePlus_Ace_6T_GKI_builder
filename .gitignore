@@ -57,3 +57,8 @@ dkms.conf
 local.properties
 .idea/
 manager_app/
+
+
+# log files
+.github/workflows/*.log
+
