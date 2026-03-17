@@ -62,3 +62,12 @@ manager_app/
 # log files
 .github/workflows/*.log
 
+# kernel workspace
+kernel_workspace/
+
+# anykernel3
+AnyKernel3/
+
+build.sh
+
+*.tgz

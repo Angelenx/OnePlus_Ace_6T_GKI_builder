@@ -1,0 +1,84 @@
+[0;36m[INFO][0m 构建日志: /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/build_20260317_134049.log
+
+[0;34m====== 编译配置 ======[0m
+  SU_TYPE         : ReSukiSU
+  SUKISU_BRANCH   : builtin
+  KERNEL_MANIFEST : common-android16-6.12-2025-09
+  ANDROID_VERSION : android16
+  KERNEL_VERSION  : 6.12
+  FEIL            : gki
+  KPM             : On
+  PROXY           : On
+  APPLY_ADIOS     : On
+  BUILD_DIR       : /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder
+  REPO_ROOT       : /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder
+  LOG_FILE        : /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/build_20260317_134049.log
+
+[0;34m====== 磁盘空间检查 ======[0m
+[0;36m[INFO][0m 可用磁盘空间: 48G（挂载点: /dev/mapper/ubuntu--vg-ubuntu--lv）
+[1;33m[WARN][0m 剩余磁盘空间不足 60G（当前: 48G），编译可能失败（推荐 80G+）
+[1;33m[WARN][0m 如确认空间足够请忽略，脚本将继续
+
+[0;34m====== 检查补丁文件 ======[0m
+[0;32m[OK][0m   补丁文件检查通过
+
+[0;34m====== 安装构建依赖 ======[0m
+[0;32m[OK][0m   所有依赖已满足
+
+[0;34m====== 配置 Git 用户信息 ======[0m
+[0;32m[OK][0m   Git 用户配置完成
+
+[0;34m====== 安装 repo 工具 ======[0m
+[0;32m[OK][0m   repo 工具已存在: <repo not installed>
+[0;36m[INFO][0m 工作目录: /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder
+
+[0;34m====== 克隆 AnyKernel3 ======[0m
+Cloning into 'AnyKernel3'...
+[0;32m[OK][0m   AnyKernel3 克隆完成
+
+[0;34m====== 同步内核源码 ======[0m
+[0;36m[INFO][0m 初始化内核仓库 (manifest: common-android16-6.12-2025-09)...
+
+repo has been initialized in /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/kernel_workspace/kernel_platform
+[0;36m[INFO][0m 同步代码库（使用 8 线程）...
+error: Unable to fully sync the tree
+error: Downloading network changes failed.
+Failing repos (network):
+prebuilts/rust
+Try re-running with "-j1 --fail-fast" to exit at the first error.
+================================================================================
+Repo command failed due to the following `SyncError` errors:
+GitCommandError: 'fetch --depth=1 --no-auto-gc --quiet aosp --force --prune --recurse-submodules=no --no-tags +refs/heads/main-kernel-2025:refs/remotes/aosp/main-kernel-2025' on platform/prebuilts/rust failed
+stdout: error: RPC failed; curl 56 GnuTLS recv error (-110): The TLS connection was non-properly terminated.
+[1;33m[WARN][0m 第 1/3 次重试（30s 后）: repo sync -c -j8 --no-tags --no-clone-bundle --force-sync
+repo sync has finished successfully.
+./build.sh: line 289: rce-sync: command not found
+
+[0;31m══════════════════════════════════════════[0m
+[0;31m  构建失败！[0m
+[0;31m  出错阶段 : 同步内核源码[0m
+[0;31m  出错行号 : 第 289 行[0m
+[0;31m  完整日志 : /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/build_20260317_134049.log[0m
+
+[1;33m  最后 20 行日志:[0m
+    error: Unable to fully sync the tree
+    error: Downloading network changes failed.
+    Failing repos (network):
+    prebuilts/rust
+    Try re-running with "-j1 --fail-fast" to exit at the first error.
+    ================================================================================
+    Repo command failed due to the following `SyncError` errors:
+    GitCommandError: 'fetch --depth=1 --no-auto-gc --quiet aosp --force --prune --recurse-submodules=no --no-tags +refs/heads/main-kernel-2025:refs/remotes/aosp/main-kernel-2025' on platform/prebuilts/rust failed
+    stdout: error: RPC failed; curl 56 GnuTLS recv error (-110): The TLS connection was non-properly terminated.
+    [1;33m[WARN][0m 第 1/3 次重试（30s 后）: repo sync -c -j8 --no-tags --no-clone-bundle --force-sync
+    repo sync has finished successfully.
+    ./build.sh: line 289: rce-sync: command not found
+    
+    [0;31m══════════════════════════════════════════[0m
+    [0;31m  构建失败！[0m
+    [0;31m  出错阶段 : 同步内核源码[0m
+    [0;31m  出错行号 : 第 289 行[0m
+    [0;31m  完整日志 : /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/build_20260317_134049.log[0m
+    
+    [1;33m  最后 20 行日志:[0m
+[0;31m══════════════════════════════════════════[0m

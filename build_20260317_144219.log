@@ -1,0 +1,411 @@
+[0;36m[INFO][0m 构建日志: /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/build_20260317_144219.log
+
+[0;34m====== 编译配置 ======[0m
+  SU_TYPE         : ReSukiSU
+  SUKISU_BRANCH   : builtin
+  KERNEL_MANIFEST : common-android16-6.12-2025-09
+  ANDROID_VERSION : android16
+  KERNEL_VERSION  : 6.12
+  FEIL            : gki
+  KPM             : On
+  PROXY           : On
+  APPLY_ADIOS     : On
+  BUILD_DIR       : /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder
+  REPO_ROOT       : /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder
+  LOG_FILE        : /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/build_20260317_144219.log
+
+[0;34m====== 磁盘空间检查 ======[0m
+[0;36m[INFO][0m 可用磁盘空间: 22G（挂载点: /dev/mapper/ubuntu--vg-ubuntu--lv）
+[1;33m[WARN][0m 剩余磁盘空间不足 60G（当前: 22G），编译可能失败（推荐 80G+）
+[1;33m[WARN][0m 如确认空间足够请忽略，脚本将继续
+
+[0;34m====== 检查补丁文件 ======[0m
+[0;32m[OK][0m   补丁文件检查通过
+
+[0;34m====== 安装构建依赖 ======[0m
+[0;32m[OK][0m   所有依赖已满足
+
+[0;34m====== 配置 Git 用户信息 ======[0m
+[0;32m[OK][0m   Git 用户配置完成
+
+[0;34m====== 安装 repo 工具 ======[0m
+[0;32m[OK][0m   repo 工具已存在: <repo not installed>
+[0;36m[INFO][0m 工作目录: /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder
+
+[0;34m====== 克隆 AnyKernel3 ======[0m
+[1;33m[WARN][0m AnyKernel3 目录已存在，跳过克隆
+
+[0;34m====== 同步内核源码 ======[0m
+[1;33m[WARN][0m .repo 目录已存在，跳过 repo init（若需切换 manifest 请先手动删除 .repo）
+[0;36m[INFO][0m 同步代码库（使用 4 线程，已写死为 4）...
+repo sync has finished successfully.
+[0;32m[OK][0m   内核源码同步完成
+
+[0;34m====== 备份源码确认（可选但强烈建议） ======[0m
+内核源码已同步到:
+  /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/kernel_workspace/kernel_platform
+
+建议现在先备份一份原始源码，例如：
+  cd "/home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder"
+  tar czf kernel_platform_backup.tgz kernel_workspace/kernel_platform
+
+是否已完成备份，继续后续打补丁 / 集成 KSU / SUSFS？ [y/N]: [0;32m[OK][0m   用户已确认备份，继续构建流程。
+[0;36m[INFO][0m 已移除 protected_module_names_list 限制
+[0;36m[INFO][0m 清理 -dirty 版本标记...
+[0;32m[OK][0m   内核版本配置完成
+
+[0;34m====== 集成 KernelSU (ReSukiSU) ======[0m
+[0;36m[INFO][0m 正在设置 ReSukiSU...
+[+] Setting up KernelSU...
+Cloning into 'KernelSU'...
+[+] Repository cloned.
+No local changes to save
+[-] Stashed current changes.
+Already up to date.
+[+] Repository updated.
+Already on 'main'
+Your branch is up to date with 'origin/main'.
+[-] Checked out main branch.
+[+] Symlink created.
+[+] Modified Makefile.
+[+] Modified Kconfig.
+[+] Done.
+[0;32m[OK][0m   ReSukiSU 配置完成
+[0;32m[OK][0m   KernelSU 注入验证通过
+
+[0;34m====== 配置 SUSFS ======[0m
+[0;36m[INFO][0m 克隆 susfs4ksu (branch: gki-android16-6.12)...
+Cloning into 'susfs4ksu'...
+[0;36m[INFO][0m 复制 SUSFS 补丁文件...
+[0;36m[INFO][0m 应用 SUSFS 补丁...
+patching file drivers/input/input.c
+patching file fs/Makefile
+patching file fs/devpts/inode.c
+patching file fs/exec.c
+patching file fs/namei.c
+Hunk #2 succeeded at 1609 (offset -8 lines).
+Hunk #3 succeeded at 1634 (offset -8 lines).
+Hunk #4 succeeded at 1646 (offset -8 lines).
+Hunk #5 succeeded at 1657 (offset -8 lines).
+Hunk #6 succeeded at 1690 (offset -8 lines).
+Hunk #7 succeeded at 1701 (offset -8 lines).
+Hunk #8 succeeded at 1734 (offset -8 lines).
+Hunk #9 succeeded at 1765 (offset -8 lines).
+Hunk #10 succeeded at 1786 (offset -8 lines).
+Hunk #11 succeeded at 1805 (offset -8 lines).
+Hunk #12 succeeded at 2132 (offset -8 lines).
+Hunk #13 succeeded at 2445 (offset -8 lines).
+Hunk #14 succeeded at 2457 (offset -8 lines).
+Hunk #15 succeeded at 2651 (offset -8 lines).
+Hunk #16 succeeded at 3608 (offset -8 lines).
+Hunk #17 succeeded at 3778 (offset -8 lines).
+Hunk #18 succeeded at 4078 (offset -8 lines).
+Hunk #19 succeeded at 4099 (offset -8 lines).
+patching file fs/namespace.c
+Hunk #2 succeeded at 262 (offset -9 lines).
+Hunk #3 succeeded at 281 (offset -9 lines).
+Hunk #4 succeeded at 312 (offset -9 lines).
+Hunk #5 succeeded at 356 (offset -9 lines).
+Hunk #6 succeeded at 1370 (offset -9 lines).
+Hunk #7 succeeded at 1464 (offset -9 lines).
+Hunk #8 succeeded at 1520 (offset -9 lines).
+Hunk #9 succeeded at 1770 (offset -9 lines).
+Hunk #10 succeeded at 4188 (offset -30 lines).
+Hunk #11 succeeded at 5677 (offset -39 lines).
+Hunk #12 succeeded at 6089 (offset -59 lines).
+patching file fs/notify/fdinfo.c
+Hunk #2 succeeded at 25 (offset -1 lines).
+Hunk #3 succeeded at 81 (offset -6 lines).
+Hunk #4 succeeded at 99 (offset -6 lines).
+patching file fs/open.c
+patching file fs/proc/base.c
+patching file fs/proc/bootconfig.c
+patching file fs/proc/fd.c
+patching file fs/proc/task_mmu.c
+Hunk #1 succeeded at 26 (offset -1 lines).
+Hunk #2 succeeded at 455 (offset -2 lines).
+Hunk #3 succeeded at 473 (offset -2 lines).
+Hunk #4 succeeded at 1339 (offset -25 lines).
+Hunk #5 succeeded at 1418 (offset -25 lines).
+Hunk #6 succeeded at 2227 (offset -25 lines).
+Hunk #7 succeeded at 2305 (offset -25 lines).
+patching file fs/proc_namespace.c
+patching file fs/read_write.c
+patching file fs/readdir.c
+patching file fs/stat.c
+patching file fs/statfs.c
+patching file kernel/kallsyms.c
+patching file kernel/reboot.c
+patching file kernel/sys.c
+patching file security/selinux/avc.c
+[0;32m[OK][0m   SUSFS 补丁应用完成
+
+[0;34m====== 应用 Fix 补丁 ======[0m
+[0;36m[INFO][0m 应用 sukisu_fix.patch...
+patching file include/linux/args.h
+patching file include/linux/lsm_count.h
+patch unexpectedly ends in middle of line
+[0;36m[INFO][0m 应用 unicode_bypass_fix.patch...
+patching file fs/unicode/utf8-norm.c
+[0;32m[OK][0m   Fix 补丁应用完成
+
+[0;34m====== 应用 ADIOS 补丁 ======[0m
+[0;36m[INFO][0m 下载 ADIOS 补丁...
+patching file block/Kconfig.iosched
+patching file block/Makefile
+patching file block/adios.c
+patching file block/elevator.c
+[0;32m[OK][0m   ADIOS 补丁应用完成
+
+[0;34m====== 写入内核配置 (gki_defconfig) ======[0m
+[0;36m[INFO][0m 启用 KSU 支持...
+[0;36m[INFO][0m 启用 KPM...
+[0;36m[INFO][0m 启用 SUSFS 功能...
+[0;36m[INFO][0m 添加 Mountify 支持...
+[0;36m[INFO][0m 加入代理优化 CONFIG...
+[0;36m[INFO][0m 启用 ADIOS 调度器...
+[0;32m[OK][0m   内核配置更新完成
+
+[0;34m====== 开始内核编译 (Bazel) ======[0m
+Extracting Bazel installation...
+Starting local Bazel server and connecting to it...
+Computing main repo mapping: 
+Loading: 
+Loading: 1 packages loaded
+Loading: 1 packages loaded
+    currently loading: common
+Analyzing: target //common:kernel_aarch64_dist (2 packages loaded)
+Analyzing: target //common:kernel_aarch64_dist (2 packages loaded, 0 targets configured)
+Analyzing: target //common:kernel_aarch64_dist (2 packages loaded, 0 targets configured)
+
+Analyzing: target //common:kernel_aarch64_dist (66 packages loaded, 103500 targets configured)
+
+INFO: Analyzed target //common:kernel_aarch64_dist (66 packages loaded, 105152 targets configured).
+[1 / 1] no actions running
+[254 / 938] [Prepa] Creating symlink prebuilts/build-tools/bc [for tool]
+[313 / 938] [Prepa] Creating symlink prebuilts/kernel-build-tools/mkfs.erofs [for tool]
+[353 / 938] Building Python zip: //build/kernel:init_ddk; 0s processwrapper-sandbox ... (2 actions, 1 running)
+[380 / 938] Generating BUILD.bazel for all_headers_aarch64 //common:kernel_aarch64_ddk_headers_archive; 0s processwrapper-sandbox
+[389 / 938] [Prepa] Creating symlink prebuilts/kernel-build-tools/mkuserimg_mke2fs [for tool]
+[414 / 938] [Prepa] Creating symlink prebuilts/build-tools/awk [for tool]
+[426 / 938] [Prepa] Creating common_config_tags //common:kernel_aarch64_env
+[441 / 938] checking cached actions
+[442 / 938] Compiling zutil.c [for tool]; 0s processwrapper-sandbox ... (15 actions running)
+[461 / 938] Compiling common/tools/testing/selftests/filesystems/binderfs/binderfs_test.c; 1s processwrapper-sandbox ... (16 actions running)
+[476 / 938] Linking common/kselftest_vdso_vdso_test_abi; 1s processwrapper-sandbox ... (16 actions running)
+[496 / 938] Compiling common/tools/testing/selftests/futex/functional/futex_requeue_pi.c; 0s processwrapper-sandbox ... (16 actions running)
+[508 / 938] Compiling common/tools/testing/selftests/futex/functional/futex_requeue_pi_mismatched_ops.c; 1s processwrapper-sandbox ... (16 actions running)
+[540 / 938] Compiling toys/posix/tar.c [for tool]; 0s processwrapper-sandbox ... (16 actions, 15 running)
+[579 / 938] Compiling common/tools/testing/selftests/vDSO/vdso_test_getcpu.c; 0s processwrapper-sandbox ... (16 actions running)
+[614 / 938] Compiling common/tools/testing/selftests/futex/functional/futex_requeue.c; 0s processwrapper-sandbox ... (14 actions, 12 running)
+[641 / 938] Compiling common/tools/testing/selftests/rtc/rtctest.c; 1s processwrapper-sandbox ... (16 actions running)
+[670 / 938] Compiling common/tools/testing/selftests/futex/functional/futex_wait_private_mapped_file.c; 1s processwrapper-sandbox ... (15 actions, 14 running)
+[715 / 938] Compiling toys/pending/tr.c [for tool]; 0s processwrapper-sandbox ... (14 actions, 13 running)
+[754 / 938] Writing: bazel-out/k8-fastbuild/bin/build/kernel/gki_certification_tools.tar.gz; 1s processwrapper-sandbox ... (13 actions running)
+[843 / 938] Compiling lib/lz4hc.c [for tool]; 1s processwrapper-sandbox ... (2 actions running)
+[855 / 938] Archiving scripts/kconfig for ext module (trim) //common:kernel_aarch64; 0s processwrapper-sandbox ... (11 actions, 5 running)
+[858 / 938] Archiving scripts/kconfig for ext module (trim) //common:kernel_aarch64; 1s processwrapper-sandbox ... (16 actions, 15 running)
+[867 / 938] Archiving scripts/kconfig for ext module (trim) //common:kernel_aarch64; 2s processwrapper-sandbox ... (15 actions, 14 running)
+[888 / 938] Archiving scripts/kconfig for ext module (trim) //common:kernel_aarch64; 3s processwrapper-sandbox ... (15 actions, 14 running)
+[923 / 938] Creating kernel config (trim) //common:kernel_aarch64_config; 0s processwrapper-sandbox
+INFO: From Creating kernel config (trim) //common:kernel_aarch64_config:
+--- common/arch/arm64/configs/gki_defconfig	2026-03-17 14:59:58.192657793 +0000
++++ /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/kernel_workspace/kernel_platform/out/bazel/output_user_root/de581fa97bf5ee4e9601c2d44a2d6a58/sandbox/processwrapper-sandbox/409/execroot/_main/out/android16-6.12/common/defconfig	2026-03-17 15:00:43.923776458 +0000
+@@ -51,7 +51,6 @@
+ # CONFIG_SYSFS_SYSCALL is not set
+ # CONFIG_FHANDLE is not set
+ # CONFIG_RSEQ is not set
+-CONFIG_KALLSYMS_ALL=y
+ CONFIG_PROFILING=y
+ CONFIG_RUST=y
+ CONFIG_ARCH_SUNXI=y
+@@ -116,6 +115,8 @@
+ CONFIG_BLK_CGROUP_IOPRIO=y
+ CONFIG_BLK_INLINE_ENCRYPTION=y
+ CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK=y
++CONFIG_MQ_IOSCHED_ADIOS=y
++CONFIG_MQ_IOSCHED_DEFAULT_ADIOS=y
+ CONFIG_GKI_TASK_STRUCT_VENDOR_SIZE_MAX=1024
+ CONFIG_GKI_HACKS_TO_FIX=y
+ # CONFIG_CORE_DUMP_DEFAULT_ELF_HEADERS is not set
+@@ -187,6 +188,7 @@
+ CONFIG_NF_CONNTRACK_SANE=y
+ CONFIG_NF_CONNTRACK_TFTP=y
+ CONFIG_NF_CT_NETLINK=y
++CONFIG_NETFILTER_XT_SET=y
+ CONFIG_NETFILTER_XT_TARGET_CLASSIFY=y
+ CONFIG_NETFILTER_XT_TARGET_CONNMARK=y
+ CONFIG_NETFILTER_XT_TARGET_CONNSECMARK=y
+@@ -202,6 +204,7 @@
+ CONFIG_NETFILTER_XT_TARGET_TRACE=y
+ CONFIG_NETFILTER_XT_TARGET_SECMARK=y
+ CONFIG_NETFILTER_XT_TARGET_TCPMSS=y
++CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y
+ CONFIG_NETFILTER_XT_MATCH_BPF=y
+ CONFIG_NETFILTER_XT_MATCH_COMMENT=y
+ CONFIG_NETFILTER_XT_MATCH_CONNBYTES=y
+@@ -231,6 +234,24 @@
+ CONFIG_NETFILTER_XT_MATCH_STRING=y
+ CONFIG_NETFILTER_XT_MATCH_TIME=y
+ CONFIG_NETFILTER_XT_MATCH_U32=y
++CONFIG_IP_SET=y
++CONFIG_IP_SET_MAX=65534
++CONFIG_IP_SET_BITMAP_IP=y
++CONFIG_IP_SET_BITMAP_IPMAC=y
++CONFIG_IP_SET_BITMAP_PORT=y
++CONFIG_IP_SET_HASH_IP=y
++CONFIG_IP_SET_HASH_IPMARK=y
++CONFIG_IP_SET_HASH_IPPORT=y
++CONFIG_IP_SET_HASH_IPPORTIP=y
++CONFIG_IP_SET_HASH_IPPORTNET=y
++CONFIG_IP_SET_HASH_IPMAC=y
++CONFIG_IP_SET_HASH_MAC=y
++CONFIG_IP_SET_HASH_NETPORTNET=y
++CONFIG_IP_SET_HASH_NET=y
++CONFIG_IP_SET_HASH_NETNET=y
++CONFIG_IP_SET_HASH_NETPORT=y
++CONFIG_IP_SET_HASH_NETIFACE=y
++CONFIG_IP_SET_LIST_SET=y
+ CONFIG_IP_NF_IPTABLES=y
+ CONFIG_IP_NF_MATCH_ECN=y
+ CONFIG_IP_NF_MATCH_RPFILTER=y
+@@ -252,6 +273,8 @@
+ CONFIG_IP6_NF_TARGET_REJECT=y
+ CONFIG_IP6_NF_MANGLE=y
+ CONFIG_IP6_NF_RAW=y
++CONFIG_IP6_NF_NAT=y
++CONFIG_IP6_NF_TARGET_MASQUERADE=y
+ CONFIG_TIPC=m
+ CONFIG_L2TP=m
+ CONFIG_BRIDGE=y
+@@ -295,6 +318,7 @@
+ CONFIG_VSOCKETS=y
+ CONFIG_VIRTIO_VSOCKETS=m
+ CONFIG_CGROUP_NET_PRIO=y
++CONFIG_BPF_STREAM_PARSER=y
+ CONFIG_CAN=m
+ CONFIG_BT=m
+ CONFIG_BT_RFCOMM=m
+@@ -664,6 +688,8 @@
+ CONFIG_ANDROID_DEBUG_KINFO=y
+ CONFIG_LIBNVDIMM=y
+ CONFIG_INTERCONNECT=y
++CONFIG_KPM=y
++CONFIG_KSU_SUSFS=y
+ CONFIG_EXT4_FS=y
+ CONFIG_EXT4_FS_POSIX_ACL=y
+ CONFIG_EXT4_FS_SECURITY=y
+@@ -688,6 +714,7 @@
+ CONFIG_FAT_KUNIT_TEST=m
+ CONFIG_EXFAT_FS=y
+ CONFIG_TMPFS=y
++CONFIG_TMPFS_POSIX_ACL=y
+ # CONFIG_EFIVAR_FS is not set
+ CONFIG_PSTORE=y
+ CONFIG_PSTORE_CONSOLE=y
+@@ -818,42 +845,3 @@
+ CONFIG_KUNIT_EXAMPLE_TEST=m
+ # CONFIG_KUNIT_DEFAULT_ENABLED is not set
+ # CONFIG_RUNTIME_TESTING_MENU is not set
+-CONFIG_KSU=y
+-CONFIG_KPM=y
+-CONFIG_KSU_SUSFS=y
+-CONFIG_KSU_SUSFS_SUS_PATH=y
+-CONFIG_KSU_SUSFS_SUS_MOUNT=y
+-CONFIG_KSU_SUSFS_SUS_KSTAT=y
+-CONFIG_KSU_SUSFS_SPOOF_UNAME=y
+-CONFIG_KSU_SUSFS_ENABLE_LOG=y
+-CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y
+-CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y
+-CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
+-CONFIG_KSU_SUSFS_SUS_MAP=y
+-CONFIG_TMPFS_XATTR=y
+-CONFIG_TMPFS_POSIX_ACL=y
+-CONFIG_BPF_STREAM_PARSER=y
+-CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y
+-CONFIG_NETFILTER_XT_SET=y
+-CONFIG_IP_SET=y
+-CONFIG_IP_SET_BITMAP_IP=y
+-CONFIG_IP_SET_BITMAP_IPMAC=y
+-CONFIG_IP_SET_BITMAP_PORT=y
+-CONFIG_IP_SET_HASH_IP=y
+-CONFIG_IP_SET_HASH_IPMARK=y
+-CONFIG_IP_SET_HASH_IPPORT=y
+-CONFIG_IP_SET_HASH_IPPORTIP=y
+-CONFIG_IP_SET_HASH_IPPORTNET=y
+-CONFIG_IP_SET_HASH_IPMAC=y
+-CONFIG_IP_SET_HASH_MAC=y
+-CONFIG_IP_SET_HASH_NETPORTNET=y
+-CONFIG_IP_SET_HASH_NET=y
+-CONFIG_IP_SET_HASH_NETNET=y
+-CONFIG_IP_SET_HASH_NETPORT=y
+-CONFIG_IP_SET_HASH_NETIFACE=y
+-CONFIG_IP_SET_LIST_SET=y
+-CONFIG_IP6_NF_NAT=y
+-CONFIG_IP6_NF_TARGET_MASQUERADE=y
+-CONFIG_IP_SET_MAX=65534
+-CONFIG_MQ_IOSCHED_ADIOS=y
+-CONFIG_MQ_IOSCHED_DEFAULT_ADIOS=y
+[924 / 938] [Prepa] Copying .config //common:kernel_aarch64
+[925 / 938] Preparing for module build (trim) //common:kernel_aarch64_modules_prepare; 1s processwrapper-sandbox ... (3 actions running)
+[925 / 938] Preparing for module build (trim) //common:kernel_aarch64_modules_prepare; 11s processwrapper-sandbox ... (3 actions running)
+[926 / 938] Preparing for module build (trim) //common:kernel_aarch64_modules_prepare; 12s processwrapper-sandbox ... (2 actions running)
+[926 / 938] Preparing for module build (trim) //common:kernel_aarch64_modules_prepare; 23s processwrapper-sandbox ... (2 actions running)
+[927 / 938] Building kernel (trim) //common:kernel_aarch64; 40s processwrapper-sandbox
+[927 / 938] Building kernel (trim) //common:kernel_aarch64; 51s processwrapper-sandbox
+[927 / 938] Building kernel (trim) //common:kernel_aarch64; 81s processwrapper-sandbox
+[927 / 938] Building kernel (trim) //common:kernel_aarch64; 141s processwrapper-sandbox
+[927 / 938] Building kernel (trim) //common:kernel_aarch64; 201s processwrapper-sandbox
+[927 / 938] Building kernel (trim) //common:kernel_aarch64; 261s processwrapper-sandbox
+[927 / 938] Building kernel (trim) //common:kernel_aarch64; 321s processwrapper-sandbox
+ERROR: /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/kernel_workspace/kernel_platform/common/BUILD.bazel:245:14: Building kernel (trim) //common:kernel_aarch64 failed: (Exit 2): bash failed: error executing KernelBuild command (from target //common:kernel_aarch64) /bin/bash -c ... (remaining 1 argument skipped)
+
+Use --sandbox_debug to see verbose messages from the sandbox and retain the sandbox build root for debugging
+/home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/kernel_workspace/kernel_platform/out/bazel/output_user_root/de581fa97bf5ee4e9601c2d44a2d6a58/sandbox/processwrapper-sandbox/413/execroot/_main/common/drivers/kernelsu/Kbuild:61: *** You should use ReSukiSU as a git submodule instead of copying code directly.  Stop.
+make[4]: *** [/home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/kernel_workspace/kernel_platform/out/bazel/output_user_root/de581fa97bf5ee4e9601c2d44a2d6a58/sandbox/processwrapper-sandbox/413/execroot/_main/common/scripts/Makefile.build:508: drivers/kernelsu] Error 2
+make[4]: *** Waiting for unfinished jobs....
+make[3]: *** [/home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/kernel_workspace/kernel_platform/out/bazel/output_user_root/de581fa97bf5ee4e9601c2d44a2d6a58/sandbox/processwrapper-sandbox/413/execroot/_main/common/scripts/Makefile.build:508: drivers] Error 2
+make[2]: *** [/home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/kernel_workspace/kernel_platform/out/bazel/output_user_root/de581fa97bf5ee4e9601c2d44a2d6a58/sandbox/processwrapper-sandbox/413/execroot/_main/common/Makefile:1994: .] Error 2
+make[1]: *** [/home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/kernel_workspace/kernel_platform/out/bazel/output_user_root/de581fa97bf5ee4e9601c2d44a2d6a58/sandbox/processwrapper-sandbox/413/execroot/_main/common/Makefile:242: __sub-make] Error 2
+make: *** [Makefile:242: __sub-make] Error 2
+-- Can't find ReSukiSU git submodule!
+-- If you are using bazel to build this kernel,
+-- Please go to Kbuild and change KSU_SRC to the absolute path of the KSU kernel folder.
+Target //common:kernel_aarch64_dist failed to build
+Use --verbose_failures to see the command lines of failed build steps.
+ERROR: /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/kernel_workspace/kernel_platform/common/BUILD.bazel:245:14 Middleman _middlemen/common_Skernel_Uaarch64_Udist-runfiles failed: (Exit 2): bash failed: error executing KernelBuild command (from target //common:kernel_aarch64) /bin/bash -c ... (remaining 1 argument skipped)
+
+Use --sandbox_debug to see verbose messages from the sandbox and retain the sandbox build root for debugging
+INFO: Elapsed time: 389.839s, Critical Path: 356.26s
+INFO: 928 processes: 516 internal, 412 processwrapper-sandbox.
+ERROR: Build did NOT complete successfully
+ERROR: Build failed. Not running target
+
+[0;31m══════════════════════════════════════════[0m
+[0;31m  构建失败！[0m
+[0;31m  出错阶段 : 开始内核编译 (Bazel)[0m
+[0;31m  出错行号 : 第 527 行[0m
+[0;31m  完整日志 : /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/build_20260317_144219.log[0m
+
+[1;33m  最后 20 行日志:[0m
+    -- Can't find ReSukiSU git submodule!
+    -- If you are using bazel to build this kernel,
+    -- Please go to Kbuild and change KSU_SRC to the absolute path of the KSU kernel folder.
+    Target //common:kernel_aarch64_dist failed to build
+    Use --verbose_failures to see the command lines of failed build steps.
+    ERROR: /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/kernel_workspace/kernel_platform/common/BUILD.bazel:245:14 Middleman _middlemen/common_Skernel_Uaarch64_Udist-runfiles failed: (Exit 2): bash failed: error executing KernelBuild command (from target //common:kernel_aarch64) /bin/bash -c ... (remaining 1 argument skipped)
+    
+    Use --sandbox_debug to see verbose messages from the sandbox and retain the sandbox build root for debugging
+    INFO: Elapsed time: 389.839s, Critical Path: 356.26s
+    INFO: 928 processes: 516 internal, 412 processwrapper-sandbox.
+    ERROR: Build did NOT complete successfully
+    ERROR: Build failed. Not running target
+    
+    [0;31m══════════════════════════════════════════[0m
+    [0;31m  构建失败！[0m
+    [0;31m  出错阶段 : 开始内核编译 (Bazel)[0m
+    [0;31m  出错行号 : 第 527 行[0m
+    [0;31m  完整日志 : /home/angelen/android_kernel_build/OnePlus_Ace_6T_GKI_builder/build_20260317_144219.log[0m
+    
+    [1;33m  最后 20 行日志:[0m
+[0;31m══════════════════════════════════════════[0m

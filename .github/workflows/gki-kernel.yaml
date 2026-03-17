@@ -167,6 +167,9 @@ jobs:
           
           patch -p1 --forward < ${{ github.workspace }}/patch/sukisu_fix.patch || true
           patch -p1 --forward < ${{ github.workspace }}/patch/unicode_bypass_fix.patch || true
+          if [ "${{ env.SU_TYPE }}" = "ReSukiSU" ]; then
+            patch -p1 --forward --fuzz=6 --ignore-whitespace < ${{ github.workspace }}/patch/resukisu_kbuild_bazel_fix.patch || true
+          fi
           echo "  [*] Fixed applied!"
       - name: "⚙️ Apply ADIOS Patch | 应用 ADIOS 补丁"
         if: ${{ env.APPLY_ADIOS == 'On' }}

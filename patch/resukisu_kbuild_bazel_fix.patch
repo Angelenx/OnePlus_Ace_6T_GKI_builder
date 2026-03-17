@@ -1,0 +1,22 @@
+diff --git a/common/drivers/kernelsu/Kbuild b/common/drivers/kernelsu/Kbuild
+--- a/common/drivers/kernelsu/Kbuild
++++ b/common/drivers/kernelsu/Kbuild
+@@ -50,13 +50,10 @@
+ GIT_BIN := /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git
+ CURL_BIN := /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin curl
+ 
+ KSU_SRC := $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+ 
+-LOCAL_GIT_EXISTS := $(shell test -e $(KSU_SRC)/../.git && echo 1 || echo 0)
+-
+-ifeq ($(LOCAL_GIT_EXISTS),0)
+-$(info -- Can't find $(REPO_NAME) git submodule!)
+-$(info -- If you are using bazel to build this kernel,)
+-$(info -- Please go to Kbuild and change KSU_SRC to the absolute path of the KSU kernel folder.)
+-$(error You should use $(REPO_NAME) as a git submodule instead of copying code directly)
+-endif
++LOCAL_GIT_EXISTS := $(shell test -e $(KSU_SRC)/../.git && echo 1 || echo 0)
++ifeq ($(LOCAL_GIT_EXISTS),0)
++$(info -- Can't find $(REPO_NAME) git submodule! (ignored for local/Bazel builds))
++$(info -- Proceeding without git metadata; version info may be incomplete.)
++endif
