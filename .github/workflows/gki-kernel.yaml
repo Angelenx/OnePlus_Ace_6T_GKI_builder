@@ -324,28 +324,18 @@ jobs:
       - name: "📦 Package Kernel | 打包内核"
         run: |
           echo "📦 准备AnyKernel3打包环境..."
-          mkdir -p kernel_workspace/kernel_platform/out/Final-Image-Find/
-          dir1=""
-          dir2=""
           image_path=$(find "kernel_workspace/kernel_platform/out/kernel_aarch64/dist" -name "Image" | head -n 1)
-          if [ -n "$image_path" ]; then
-            dir1=$(dirname "$image_path")/
-            echo "✅ 成功找到 Image 文件"
+          if [ -z "$image_path" ] || [ ! -f "$image_path" ]; then
+            echo "❌ 找不到 Image 文件，构建失败"
+            exit 1
           fi
-          if [ -n "$image_path" ] && [ -f "$image_path" ]; then
-            echo "Image file finally located at: $image_path"
-            cp "$image_path" ./AnyKernel3/Image
-            cp "$image_path" kernel_workspace/kernel_platform/out/Final-Image-Find/Image
-          fi
-          cd AnyKernel3
-          zip -r ../${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip ./*
-          cd ..
-          cp ${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip kernel_workspace/
-          echo "✅ 内核打包完成: ${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip"
+          echo "✅ Image 文件位于: $image_path"
+          cp "$image_path" ./AnyKernel3/Image
+          echo "✅ 内核打包准备完成"
       # ====================== 上传阶段 ======================
 
       - name: "📤 Upload AnyKernel3 | 上传 AnyKernel3"
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip
-          path: ./kernel_workspace/${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip
+          name: ${{ steps.set_name.outputs.ARTIFACT_NAME }}
+          path: ./AnyKernel3/
