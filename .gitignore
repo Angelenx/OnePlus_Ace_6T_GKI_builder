@@ -71,3 +71,6 @@ AnyKernel3/
 build.sh
 
 *.tgz
+
+# vscode files
+.vscode/
