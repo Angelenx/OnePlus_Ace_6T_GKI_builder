@@ -165,12 +165,22 @@ jobs:
           ls
           cd kernel_workspace/kernel_platform/common
           
+          echo "📂 当前目录内容："
+          ls
+
+          echo "🔧 应用通用修复补丁..."
           patch -p1 --forward < ${{ github.workspace }}/patch/sukisu_fix.patch || true
           patch -p1 --forward < ${{ github.workspace }}/patch/unicode_bypass_fix.patch || true
+
           if [ "${{ env.SU_TYPE }}" = "ReSukiSU" ]; then
-            patch -p1 --forward --fuzz=6 --ignore-whitespace < ${{ github.workspace }}/patch/resukisu_kbuild_bazel_fix.patch || true
+            echo "🔧 应用 ReSukiSU Bazel Kbuild 修复补丁..."
+            # 对于 ReSukiSU，确保 Kbuild 不再因为缺少 git 子模块而中止 Bazel 构建
+            patch -p1 --forward --fuzz=6 --ignore-whitespace < ${{ github.workspace }}/patch/resukisu_kbuild_bazel_fix.patch
+            echo "🔍 ReSukiSU Kbuild 关键片段："
+            sed -n '50,80p' drivers/kernelsu/Kbuild || true
           fi
-          echo "  [*] Fixed applied!"
+
+          echo "✅ 所有 Fixes 处理完成"
       - name: "⚙️ Apply ADIOS Patch | 应用 ADIOS 补丁"
         if: ${{ env.APPLY_ADIOS == 'On' }}
         run: |
