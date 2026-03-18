@@ -200,17 +200,30 @@ jobs:
             #           替换为硬编码的真实 commit 数量，公式继续正常运算。
             # -------------------------------------------------------
             REAL_KSU_LOCAL_VERSION=$(git -C KernelSU rev-list --count HEAD 2>/dev/null || echo "")
+            REAL_KSU_TAG=$(git -C KernelSU describe --abbrev=0 --tags 2>/dev/null || echo "unknown")
+            REAL_KSU_SHA=$(git -C KernelSU rev-parse --short=8 HEAD 2>/dev/null || echo "unknown")
+
             if [ -n "$REAL_KSU_LOCAL_VERSION" ] && [ "$REAL_KSU_LOCAL_VERSION" -gt 1 ] 2>/dev/null; then
+              # 数字版本号：替换 KSU_LOCAL_VERSION 的 $(shell ...) 为硬编码值
               sed -i "s|KSU_LOCAL_VERSION := \$(shell.*|KSU_LOCAL_VERSION := ${REAL_KSU_LOCAL_VERSION}|" \
                 KernelSU/kernel/Kbuild
               KSU_EXPECTED_VERSION=$((30000 + REAL_KSU_LOCAL_VERSION + 700))
-              echo "🔖 版本覆写完成: KSU_LOCAL_VERSION=${REAL_KSU_LOCAL_VERSION}, 预期版本号=${KSU_EXPECTED_VERSION}"
+              echo "🔖 数字版本: KSU_LOCAL_VERSION=${REAL_KSU_LOCAL_VERSION} → 预期版本号 ${KSU_EXPECTED_VERSION}"
             else
               echo "⚠️  无法获取真实 commit 数量，版本号将回退为 30701"
             fi
 
-            echo "🔍 Kbuild 版本相关行（验证覆写结果）："
-            grep -n "KSU_LOCAL_VERSION\|KSU_VERSION" KernelSU/kernel/Kbuild | head -5 || true
+            # 版本名称：替换 KSU_TAG_NAME / KSU_COMMIT_SHA 的 $(shell ...) 为硬编码值
+            # 避免沙盒内 git 沿目录树向上误读到 workflow 仓库的 SHA
+            sed -i "s|KSU_TAG_NAME    := \$(shell.*|KSU_TAG_NAME    := ${REAL_KSU_TAG}|" \
+              KernelSU/kernel/Kbuild
+            sed -i "s|KSU_COMMIT_SHA  := \$(shell.*|KSU_COMMIT_SHA  := ${REAL_KSU_SHA}|" \
+              KernelSU/kernel/Kbuild
+            echo "🔖 版本名称: ${REAL_KSU_TAG}-${REAL_KSU_SHA}@ReSukiSU"
+
+            echo "🔍 Kbuild 覆写结果验证："
+            grep -n "KSU_LOCAL_VERSION\|KSU_TAG_NAME\|KSU_COMMIT_SHA\|KSU_VERSION :=" \
+              KernelSU/kernel/Kbuild | head -8 || true
           fi
 
           echo "✅ 所有 Fixes 处理完成"
