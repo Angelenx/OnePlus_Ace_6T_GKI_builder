@@ -26,10 +26,6 @@ on:
         description: "代理优化"
         required: true
         default: "On"
-      APPLY_HYMOFS:
-        description: "应用HymoFS补丁"
-        required: true
-        default: "Off"
       APPLY_ADIOS:
         description: "应用ADIOS补丁"
         required: true
@@ -39,7 +35,7 @@ on:
         required: false
         default: "https://github.com/firelzrd/adios/raw/refs/heads/main/patches/stable/0001-linux6.12.44-ADIOS-3.1.9.patch"
       KERNEL_MANIFEST:
-        description: "内核manifest分支"
+        description: "内核manifest分支（common-android16-6.12-2025-09或2025-12，又或2026-03）"
         required: true
         default: "common-android16-6.12-2025-09"
       SU_TYPE:
@@ -50,7 +46,7 @@ on:
          
 jobs:
   build:
-    name: Build SukiSU Kernel - HymoFS Test
+    name: Build SukiSU Kernel
     runs-on: ubuntu-latest
     env:
       SUKISU_BRANCH: ${{ github.event.inputs.SUkiSU_BRANCH }}
@@ -63,7 +59,6 @@ jobs:
       KERNEL_VERSION: ${{ github.event.inputs.KERNEL_VERSION }}
       KPM: ${{ github.event.inputs.KPM }}
       proxy: ${{ github.event.inputs.proxy }}
-      APPLY_HYMOFS: ${{ github.event.inputs.APPLY_HYMOFS }}
       APPLY_ADIOS: ${{ github.event.inputs.APPLY_ADIOS }}
       KERNEL_MANIFEST: ${{ github.event.inputs.KERNEL_MANIFEST }}
       ADIOS_URL: ${{ github.event.inputs.ADIOS_URL }}
@@ -182,14 +177,6 @@ jobs:
           patch -p1 -F 3 < 0001-linux6.12.44-ADIOS-3.1.8.patch
           echo "  [*] ADIOS 代码注入完成！"
       
-      - name: "⚙️ Apply HymoFS Patch | 应用 HymoFS 补丁"
-        if: ${{ env.APPLY_HYMOFS == 'On' }}
-        run: |
-          cd kernel_workspace/kernel_platform/common
-          patch -p1 -F 3 < ${{ github.workspace }}/patch/hymofs_with_susfs.patch
-          echo "  [*] HymoFS 代码注入完成！"
-          
-          
       - name: "⚙️ Configure Kernel Options | 配置内核选项"
         run: |
           cd kernel_workspace/kernel_platform
@@ -202,10 +189,6 @@ jobs:
             echo "📦 启用 KPM..."
             echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
           fi
-          if [ "${{ env.APPLY_HYMOFS }}" = "On" ]; then
-            echo "CONFIG_HYMOFS=y" >> ./common/arch/arm64/configs/gki_defconfig
-          fi
-          
           echo "📦 启用 SUSFS 功能..."
           echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./common/arch/arm64/configs/gki_defconfig
