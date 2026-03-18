@@ -68,9 +68,9 @@ kernel_workspace/
 # anykernel3
 AnyKernel3/
 
-build.sh
 
 *.tgz
 
 # vscode files
 .vscode/
+
