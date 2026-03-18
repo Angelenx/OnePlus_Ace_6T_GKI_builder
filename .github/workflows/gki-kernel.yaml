@@ -140,13 +140,9 @@ jobs:
             echo "🛠️ 正在设置 ReSukiSU..."
             curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
             
-            # 在 .git 还存在时，读取真实版本号并写入环境变量
-            # Bazel 沙盒不携带 .git，版本检测会回退到 30701，需要在此提前记录
             KSU_COMMIT_SHA=$(git -C KernelSU rev-parse HEAD)
-            KSU_GIT_VERSION=$(git -C KernelSU describe --abbrev=0 --tags 2>/dev/null | sed 's/v//' || echo "")
             echo "KSU_COMMIT_SHA=$KSU_COMMIT_SHA" >> $GITHUB_ENV
-            echo "KSU_GIT_VERSION=$KSU_GIT_VERSION" >> $GITHUB_ENV
-            echo "✅ ReSukiSU 配置完成（commit: ${KSU_COMMIT_SHA:0:8}, version: ${KSU_GIT_VERSION:-unknown}）"
+            echo "✅ ReSukiSU 配置完成（commit: ${KSU_COMMIT_SHA:0:8}）"
             
             echo "📦 追加 ReSukiSU 所需 defconfig 项..."
             echo "CONFIG_KALLSYMS=y"     >> common/arch/arm64/configs/gki_defconfig
@@ -190,10 +186,31 @@ jobs:
 
           if [ "${{ env.SU_TYPE }}" = "ReSukiSU" ]; then
             echo "🔧 应用 ReSukiSU Bazel Kbuild 修复补丁..."
-            # 对于 ReSukiSU，确保 Kbuild 不再因为缺少 git 子模块而中止 Bazel 构建
+            # 移除 Kbuild 里因缺少 git submodule 而中止构建的 $(error ...) 检查
             patch -p1 --forward --fuzz=6 --ignore-whitespace < ${{ github.workspace }}/patch/resukisu_kbuild_bazel_fix.patch
-            echo "🔍 ReSukiSU Kbuild 关键片段："
-            sed -n '50,80p' common/drivers/kernelsu/Kbuild || true
+
+            # -------------------------------------------------------
+            # 版本号修复：
+            # Kbuild 版本公式：KSU_VERSION = 30000 + KSU_LOCAL_VERSION + 700
+            # 其中 KSU_LOCAL_VERSION = git rev-list --count HEAD
+            # Bazel 沙盒不携带 .git，git 失败返回 1，导致 30000+1+700=30701
+            #
+            # 30701 是运行时计算结果，不是源文件字面量，不能用 sed 直接替换。
+            # 正确做法：在沙盒建立前把 KSU_LOCAL_VERSION 的 $(shell ...) 那行
+            #           替换为硬编码的真实 commit 数量，公式继续正常运算。
+            # -------------------------------------------------------
+            REAL_KSU_LOCAL_VERSION=$(git -C KernelSU rev-list --count HEAD 2>/dev/null || echo "")
+            if [ -n "$REAL_KSU_LOCAL_VERSION" ] && [ "$REAL_KSU_LOCAL_VERSION" -gt 1 ] 2>/dev/null; then
+              sed -i "s|KSU_LOCAL_VERSION := \$(shell.*|KSU_LOCAL_VERSION := ${REAL_KSU_LOCAL_VERSION}|" \
+                KernelSU/kernel/Kbuild
+              KSU_EXPECTED_VERSION=$((30000 + REAL_KSU_LOCAL_VERSION + 700))
+              echo "🔖 版本覆写完成: KSU_LOCAL_VERSION=${REAL_KSU_LOCAL_VERSION}, 预期版本号=${KSU_EXPECTED_VERSION}"
+            else
+              echo "⚠️  无法获取真实 commit 数量，版本号将回退为 30701"
+            fi
+
+            echo "🔍 Kbuild 版本相关行（验证覆写结果）："
+            grep -n "KSU_LOCAL_VERSION\|KSU_VERSION" KernelSU/kernel/Kbuild | head -5 || true
           fi
 
           echo "✅ 所有 Fixes 处理完成"
@@ -278,15 +295,7 @@ jobs:
           echo "🏗️ 开始内核编译..."
           
           cd kernel_workspace/kernel_platform
-          
-          # 将 ReSukiSU 版本号透传进 Bazel 沙盒，避免沙盒内 git 不可用导致回退到 30701
-          BAZEL_EXTRA_ARGS=""
-          if [ -n "${{ env.KSU_GIT_VERSION }}" ]; then
-            echo "🔖 透传 KSU 版本号到 Bazel 沙盒: ${{ env.KSU_GIT_VERSION }}"
-            BAZEL_EXTRA_ARGS="--action_env=KSU_GIT_VERSION=${{ env.KSU_GIT_VERSION }}"
-          fi
-          
-          tools/bazel run $BAZEL_EXTRA_ARGS //common:kernel_aarch64_dist
+          tools/bazel run //common:kernel_aarch64_dist
           
           echo "✅ 内核编译完成"
          
