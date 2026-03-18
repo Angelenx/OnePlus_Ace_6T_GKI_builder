@@ -139,11 +139,25 @@ jobs:
           if [ "${{ env.SU_TYPE }}" = "ReSukiSU" ]; then
             echo "🛠️ 正在设置 ReSukiSU..."
             curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
-            echo "✅ ReSukiSU 配置完成"
+            
+            # 在 .git 还存在时，读取真实版本号并写入环境变量
+            # Bazel 沙盒不携带 .git，版本检测会回退到 30701，需要在此提前记录
+            KSU_COMMIT_SHA=$(git -C KernelSU rev-parse HEAD)
+            KSU_GIT_VERSION=$(git -C KernelSU describe --abbrev=0 --tags 2>/dev/null | sed 's/v//' || echo "")
+            echo "KSU_COMMIT_SHA=$KSU_COMMIT_SHA" >> $GITHUB_ENV
+            echo "KSU_GIT_VERSION=$KSU_GIT_VERSION" >> $GITHUB_ENV
+            echo "✅ ReSukiSU 配置完成（commit: ${KSU_COMMIT_SHA:0:8}, version: ${KSU_GIT_VERSION:-unknown}）"
+            
+            echo "📦 追加 ReSukiSU 所需 defconfig 项..."
+            echo "CONFIG_KALLSYMS=y"     >> common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_KALLSYMS_ALL=y" >> common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_KPROBES=y"      >> common/arch/arm64/configs/gki_defconfig
           else
             echo "🛠️ 正在设置 SukiSU Ultra..."
             curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/builtin/kernel/setup.sh" | bash -s ${{env.SUKISU_BRANCH}}
-            echo "✅ SukiSU Ultra 配置完成"
+            KSU_COMMIT_SHA=$(git -C KernelSU rev-parse HEAD 2>/dev/null || echo "unknown")
+            echo "KSU_COMMIT_SHA=$KSU_COMMIT_SHA" >> $GITHUB_ENV
+            echo "✅ SukiSU Ultra 配置完成（commit: ${KSU_COMMIT_SHA:0:8}）"
           fi
           
       - name: "🔧 Setup SUSFS | 配置 SUSFS"
@@ -264,7 +278,15 @@ jobs:
           echo "🏗️ 开始内核编译..."
           
           cd kernel_workspace/kernel_platform
-          tools/bazel run //common:kernel_aarch64_dist
+          
+          # 将 ReSukiSU 版本号透传进 Bazel 沙盒，避免沙盒内 git 不可用导致回退到 30701
+          BAZEL_EXTRA_ARGS=""
+          if [ -n "${{ env.KSU_GIT_VERSION }}" ]; then
+            echo "🔖 透传 KSU 版本号到 Bazel 沙盒: ${{ env.KSU_GIT_VERSION }}"
+            BAZEL_EXTRA_ARGS="--action_env=KSU_GIT_VERSION=${{ env.KSU_GIT_VERSION }}"
+          fi
+          
+          tools/bazel run $BAZEL_EXTRA_ARGS //common:kernel_aarch64_dist
           
           echo "✅ 内核编译完成"
          
