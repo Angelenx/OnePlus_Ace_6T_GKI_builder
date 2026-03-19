@@ -63,7 +63,7 @@
 | 补丁文件 | 说明 |
 |----------|------|
 | `patch/sukisu_fix.patch` | 修复 LSM 计数溢出（扩展 `COUNT_ARGS` 上限，为 KSU 预留 LSM slot，防止 "Too many LSMs registered" Panic） |
-| `patch/unicode_bypass_fix.patch` | 修复 `fs/unicode/utf8-norm.c` 的编译问题 |
+| `patch/unicode_bypass_fix.patch` | 修复 Android 内核中的零宽字符问题 |
 | `patch/resukisu_kbuild_bazel_fix.patch` | ReSukiSU 专用：移除 `drivers/kernelsu/Kbuild` 中因缺少 git submodule 而中止 Bazel 构建的 `$(error ...)` 检查 |
 
 ---

@@ -64,7 +64,7 @@ Supports integration of [SukiSU Ultra](https://github.com/SukiSU-Ultra/SukiSU-Ul
 | Patch File | Description |
 |------------|-------------|
 | `patch/sukisu_fix.patch` | Fixes LSM count overflow — extends `COUNT_ARGS` limit and reserves an LSM slot for KSU, preventing "Too many LSMs registered" kernel panic |
-| `patch/unicode_bypass_fix.patch` | Fixes a compile issue in `fs/unicode/utf8-norm.c` |
+| `patch/unicode_bypass_fix.patch` | Fixes the Zero-Width Character issue in the Android kernel |
 | `patch/resukisu_kbuild_bazel_fix.patch` | ReSukiSU only: removes the `$(error ...)` abort in `drivers/kernelsu/Kbuild` that triggers when a git submodule is missing during Bazel builds |
 
 ---
