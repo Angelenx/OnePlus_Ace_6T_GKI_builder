@@ -2,8 +2,8 @@ name: Build SukiSU Kernel
 on:
   workflow_dispatch:
     inputs:
-      SUkiSU_BRANCH:
-        description: "SukiSU Ultra分支"
+      SUKISU_BRANCH:
+        description: "SukiSU Ultra分支(仅用于SukiSU Ultra，选择ReSukiSU后无效)"
         required: true
         default: "builtin"
       FEIL:
