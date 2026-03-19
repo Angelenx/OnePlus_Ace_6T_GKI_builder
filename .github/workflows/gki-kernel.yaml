@@ -139,11 +139,21 @@ jobs:
           if [ "${{ env.SU_TYPE }}" = "ReSukiSU" ]; then
             echo "🛠️ 正在设置 ReSukiSU..."
             curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
-            echo "✅ ReSukiSU 配置完成"
+            
+            KSU_COMMIT_SHA=$(git -C KernelSU rev-parse HEAD)
+            echo "KSU_COMMIT_SHA=$KSU_COMMIT_SHA" >> $GITHUB_ENV
+            echo "✅ ReSukiSU 配置完成（commit: ${KSU_COMMIT_SHA:0:8}）"
+            
+            echo "📦 追加 ReSukiSU 所需 defconfig 项..."
+            echo "CONFIG_KALLSYMS=y"     >> common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_KALLSYMS_ALL=y" >> common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_KPROBES=y"      >> common/arch/arm64/configs/gki_defconfig
           else
             echo "🛠️ 正在设置 SukiSU Ultra..."
             curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/builtin/kernel/setup.sh" | bash -s ${{env.SUKISU_BRANCH}}
-            echo "✅ SukiSU Ultra 配置完成"
+            KSU_COMMIT_SHA=$(git -C KernelSU rev-parse HEAD 2>/dev/null || echo "unknown")
+            echo "KSU_COMMIT_SHA=$KSU_COMMIT_SHA" >> $GITHUB_ENV
+            echo "✅ SukiSU Ultra 配置完成（commit: ${KSU_COMMIT_SHA:0:8}）"
           fi
           
       - name: "🔧 Setup SUSFS | 配置 SUSFS"
@@ -163,11 +173,60 @@ jobs:
       - name: "⚙️ Apply Fixes"
         run: |
           ls
-          cd kernel_workspace/kernel_platform/common
+          cd kernel_workspace/kernel_platform
           
+          echo "📂 当前目录内容（kernel_platform 根目录）："
+          ls
+
+          echo "🔧 在 common 目录应用通用修复补丁..."
+          cd common
           patch -p1 --forward < ${{ github.workspace }}/patch/sukisu_fix.patch || true
           patch -p1 --forward < ${{ github.workspace }}/patch/unicode_bypass_fix.patch || true
-          echo "  [*] Fixed applied!"
+          cd ..
+
+          if [ "${{ env.SU_TYPE }}" = "ReSukiSU" ]; then
+            echo "🔧 应用 ReSukiSU Bazel Kbuild 修复补丁..."
+            # 移除 Kbuild 里因缺少 git submodule 而中止构建的 $(error ...) 检查
+            patch -p1 --forward --fuzz=6 --ignore-whitespace < ${{ github.workspace }}/patch/resukisu_kbuild_bazel_fix.patch
+
+            # -------------------------------------------------------
+            # 版本号修复：
+            # Kbuild 版本公式：KSU_VERSION = 30000 + KSU_LOCAL_VERSION + 700
+            # 其中 KSU_LOCAL_VERSION = git rev-list --count HEAD
+            # Bazel 沙盒不携带 .git，git 失败返回 1，导致 30000+1+700=30701
+            #
+            # 30701 是运行时计算结果，不是源文件字面量，不能用 sed 直接替换。
+            # 正确做法：在沙盒建立前把 KSU_LOCAL_VERSION 的 $(shell ...) 那行
+            #           替换为硬编码的真实 commit 数量，公式继续正常运算。
+            # -------------------------------------------------------
+            REAL_KSU_LOCAL_VERSION=$(git -C KernelSU rev-list --count HEAD 2>/dev/null || echo "")
+            REAL_KSU_TAG=$(git -C KernelSU describe --abbrev=0 --tags 2>/dev/null || echo "unknown")
+            REAL_KSU_SHA=$(git -C KernelSU rev-parse --short=8 HEAD 2>/dev/null || echo "unknown")
+
+            if [ -n "$REAL_KSU_LOCAL_VERSION" ] && [ "$REAL_KSU_LOCAL_VERSION" -gt 1 ] 2>/dev/null; then
+              # 数字版本号：替换 KSU_LOCAL_VERSION 的 $(shell ...) 为硬编码值
+              sed -i "s|KSU_LOCAL_VERSION := \$(shell.*|KSU_LOCAL_VERSION := ${REAL_KSU_LOCAL_VERSION}|" \
+                KernelSU/kernel/Kbuild
+              KSU_EXPECTED_VERSION=$((30000 + REAL_KSU_LOCAL_VERSION + 700))
+              echo "🔖 数字版本: KSU_LOCAL_VERSION=${REAL_KSU_LOCAL_VERSION} → 预期版本号 ${KSU_EXPECTED_VERSION}"
+            else
+              echo "⚠️  无法获取真实 commit 数量，版本号将回退为 30701"
+            fi
+
+            # 版本名称：替换 KSU_TAG_NAME / KSU_COMMIT_SHA 的 $(shell ...) 为硬编码值
+            # 避免沙盒内 git 沿目录树向上误读到 workflow 仓库的 SHA
+            sed -i "s|KSU_TAG_NAME    := \$(shell.*|KSU_TAG_NAME    := ${REAL_KSU_TAG}|" \
+              KernelSU/kernel/Kbuild
+            sed -i "s|KSU_COMMIT_SHA  := \$(shell.*|KSU_COMMIT_SHA  := ${REAL_KSU_SHA}|" \
+              KernelSU/kernel/Kbuild
+            echo "🔖 版本名称: ${REAL_KSU_TAG}-${REAL_KSU_SHA}@ReSukiSU"
+
+            echo "🔍 Kbuild 覆写结果验证："
+            grep -n "KSU_LOCAL_VERSION\|KSU_TAG_NAME\|KSU_COMMIT_SHA\|KSU_VERSION :=" \
+              KernelSU/kernel/Kbuild | head -8 || true
+          fi
+
+          echo "✅ 所有 Fixes 处理完成"
       - name: "⚙️ Apply ADIOS Patch | 应用 ADIOS 补丁"
         if: ${{ env.APPLY_ADIOS == 'On' }}
         run: |
@@ -278,28 +337,18 @@ jobs:
       - name: "📦 Package Kernel | 打包内核"
         run: |
           echo "📦 准备AnyKernel3打包环境..."
-          mkdir -p kernel_workspace/kernel_platform/out/Final-Image-Find/
-          dir1=""
-          dir2=""
           image_path=$(find "kernel_workspace/kernel_platform/out/kernel_aarch64/dist" -name "Image" | head -n 1)
-          if [ -n "$image_path" ]; then
-            dir1=$(dirname "$image_path")/
-            echo "✅ 成功找到 Image 文件"
+          if [ -z "$image_path" ] || [ ! -f "$image_path" ]; then
+            echo "❌ 找不到 Image 文件，构建失败"
+            exit 1
           fi
-          if [ -n "$image_path" ] && [ -f "$image_path" ]; then
-            echo "Image file finally located at: $image_path"
-            cp "$image_path" ./AnyKernel3/Image
-            cp "$image_path" kernel_workspace/kernel_platform/out/Final-Image-Find/Image
-          fi
-          cd AnyKernel3
-          zip -r ../${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip ./*
-          cd ..
-          cp ${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip kernel_workspace/
-          echo "✅ 内核打包完成: ${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip"
+          echo "✅ Image 文件位于: $image_path"
+          cp "$image_path" ./AnyKernel3/Image
+          echo "✅ 内核打包准备完成"
       # ====================== 上传阶段 ======================
 
       - name: "📤 Upload AnyKernel3 | 上传 AnyKernel3"
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip
-          path: ./kernel_workspace/${{ steps.set_name.outputs.ARTIFACT_NAME }}.zip
+          name: ${{ steps.set_name.outputs.ARTIFACT_NAME }}
+          path: ./AnyKernel3/
