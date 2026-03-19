@@ -1,4 +1,4 @@
-name: Build SukiSU Ultra
+name: Build SukiSU Kernel
 on:
   workflow_dispatch:
     inputs:
