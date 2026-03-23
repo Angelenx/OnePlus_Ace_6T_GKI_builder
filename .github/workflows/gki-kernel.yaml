@@ -161,6 +161,14 @@ jobs:
             echo "✅ SukiSU Ultra 配置完成（commit: ${KSU_COMMIT_SHA:0:8}）"
           fi
           
+      - name: "⚙️ Apply HymoFS Patch | 应用 HymoFS 补丁"
+        if: ${{ env.APPLY_HYMOFS == 'On' }}
+        run: |
+          # HymoFS 与 SUSFS 均修改 readdir.c / stat.c / selinux/avc.c
+          # 必须先于 SUSFS 打入，否则上下文偏移导致 hunk 失败
+          cd kernel_workspace/kernel_platform/common
+          patch -p1 -F 3 < ${{ github.workspace }}/patch/hymofs.patch
+          echo "  [*] HymoFS 代码注入完成！"
       - name: "🔧 Setup SUSFS | 配置 SUSFS"
         run: |
           cd kernel_workspace
@@ -232,12 +240,6 @@ jobs:
           fi
 
           echo "✅ 所有 Fixes 处理完成"
-      - name: "⚙️ Apply HymoFS Patch | 应用 HymoFS 补丁"
-        if: ${{ env.APPLY_HYMOFS == 'On' }}
-        run: |
-          cd kernel_workspace/kernel_platform/common
-          patch -p1 -F 3 < ${{ github.workspace }}/patch/hymofs.patch
-          echo "  [*] HymoFS 代码注入完成！"
       - name: "⚙️ Apply ADIOS Patch | 应用 ADIOS 补丁"
         if: ${{ env.APPLY_ADIOS == 'On' }}
         run: |
