@@ -21,7 +21,7 @@ on:
       KPM:
         description: "KPM补丁"
         required: true
-        default: "On"
+        default: "Off"
       proxy:
         description: "代理优化"
         required: true
@@ -29,10 +29,14 @@ on:
       APPLY_ADIOS:
         description: "应用ADIOS补丁"
         required: true
-        default: "On"
+        default: "Off"
+      APPLY_HYMOFS:
+        description: "应用 HymoFS 补丁（与 SUSFS 等同改 fs/ 时可能冲突，失败需手动合并补丁）"
+        required: true
+        default: "Off"
       ADIOS_URL:
         description: "ADIOS补丁链接"
-        required: false
+        required: true
         default: "https://github.com/firelzrd/adios/raw/refs/heads/main/patches/stable/0001-linux6.12.44-ADIOS-3.1.9.patch"
       KERNEL_MANIFEST:
         description: "内核manifest分支（common-android16-6.12-2025-09或2025-12，又或2026-03）"
@@ -49,7 +53,7 @@ jobs:
     name: Build SukiSU Kernel
     runs-on: ubuntu-latest
     env:
-      SUKISU_BRANCH: ${{ github.event.inputs.SUkiSU_BRANCH }}
+      SUKISU_BRANCH: ${{ github.event.inputs.SUKISU_BRANCH }}
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
       CCACHE_HARDLINK: "true"
@@ -60,6 +64,7 @@ jobs:
       KPM: ${{ github.event.inputs.KPM }}
       proxy: ${{ github.event.inputs.proxy }}
       APPLY_ADIOS: ${{ github.event.inputs.APPLY_ADIOS }}
+      APPLY_HYMOFS: ${{ github.event.inputs.APPLY_HYMOFS }}
       KERNEL_MANIFEST: ${{ github.event.inputs.KERNEL_MANIFEST }}
       ADIOS_URL: ${{ github.event.inputs.ADIOS_URL }}
       SU_TYPE: ${{ github.event.inputs.SU_TYPE }}
@@ -227,6 +232,12 @@ jobs:
           fi
 
           echo "✅ 所有 Fixes 处理完成"
+      - name: "⚙️ Apply HymoFS Patch | 应用 HymoFS 补丁"
+        if: ${{ env.APPLY_HYMOFS == 'On' }}
+        run: |
+          cd kernel_workspace/kernel_platform/common
+          patch -p1 -F 3 < ${{ github.workspace }}/patch/hymofs.patch
+          echo "  [*] HymoFS 代码注入完成！"
       - name: "⚙️ Apply ADIOS Patch | 应用 ADIOS 补丁"
         if: ${{ env.APPLY_ADIOS == 'On' }}
         run: |
@@ -259,6 +270,19 @@ jobs:
           echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SUS_MAP=y" >> ./common/arch/arm64/configs/gki_defconfig
+          if [ "${{ env.APPLY_HYMOFS }}" = "On" ]; then
+            echo "📦 启用 HymoFS..."
+            echo "CONFIG_HYMOFS=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_HYMOFS_REVERSE_LOOKUP=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_HYMOFS_FORWARD_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_HYMOFS_HIDE_ENTRIES=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_HYMOFS_INJECT_ENTRIES=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_HYMOFS_STAT_SPOOF=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_HYMOFS_XATTR_FILTER=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_HYMOFS_UNAME_SPOOF=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_HYMOFS_CMDLINE_SPOOF=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_HYMOFS_DEBUG=y" >> ./common/arch/arm64/configs/gki_defconfig
+          fi
           echo "📦 添加对 Mountify (backslashxx/mountify) 模块的支持"
           echo "CONFIG_TMPFS_XATTR=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -325,12 +349,22 @@ jobs:
       - name: "🧠 Set Artifact Name | 设置产物名称"
         id: set_name
         run: |
+          # 基础段：前缀 + SU 类型 + manifest
           if [ "${{ env.SU_TYPE }}" = "ReSukiSU" ]; then
-            suffix="ReSukiSU"
+            su_tag="ReSukiSU"
           else
-            suffix="SukiSU_Ultra"
+            su_tag="SukiSU_Ultra"
           fi
-          echo "ARTIFACT_NAME=${{ env.FEIL }}_${suffix}_${{env.KERNEL_MANIFEST}}" >> $GITHUB_OUTPUT
+          name="${{ env.FEIL }}_${su_tag}_${{ env.KERNEL_MANIFEST }}"
+
+          # 可选功能段（有则追加，无则跳过）
+          [ "${{ env.KPM }}"         = "On" ] && name="${name}-KPM"
+          [ "${{ env.APPLY_HYMOFS }}" = "On" ] && name="${name}-HymoFS"
+          [ "${{ env.APPLY_ADIOS }}"  = "On" ] && name="${name}-ADIOS"
+          [ "${{ env.proxy }}"        = "On" ] && name="${name}-Proxy"
+
+          echo "ARTIFACT_NAME=${name}" >> $GITHUB_OUTPUT
+          echo "📦 产物名称: ${name}"
       
       - name: "📦 Package Kernel | 打包内核"
         run: |
