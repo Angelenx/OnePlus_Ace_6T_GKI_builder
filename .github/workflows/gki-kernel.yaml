@@ -120,14 +120,14 @@ jobs:
      
           sed -i '/protected_module_names_list = ":gki_aarch64_protected_module_names",/d' kernel_platform/common/BUILD.bazel
 
-          echo "🔧 正在配置内核版本信息..."
-          # Remove -dirty in kernel version
-          sed -i 's/ -dirty//g' kernel_platform/common/scripts/setlocalversion || true
-          sed -i 's/ -dirty//g' kernel_platform/msm-kernel/scripts/setlocalversion || true
-          sed -i 's/ -dirty//g' kernel_platform/external/dtc/scripts/setlocalversion || true
-          sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' kernel_platform/common/scripts/setlocalversion || true
-          sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' kernel_platform/msm-kernel/scripts/setlocalversion || true
-          sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' kernel_platform/external/dtc/scripts/setlocalversion || true
+          # echo "🔧 正在配置内核版本信息..."
+          # # Remove -dirty in kernel version
+          # sed -i 's/ -dirty//g' kernel_platform/common/scripts/setlocalversion || true
+          # sed -i 's/ -dirty//g' kernel_platform/msm-kernel/scripts/setlocalversion || true
+          # sed -i 's/ -dirty//g' kernel_platform/external/dtc/scripts/setlocalversion || true
+          # sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' kernel_platform/common/scripts/setlocalversion || true
+          # sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' kernel_platform/msm-kernel/scripts/setlocalversion || true
+          # sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' kernel_platform/external/dtc/scripts/setlocalversion || true
 
           echo "✅ 内核配置完成"
 
